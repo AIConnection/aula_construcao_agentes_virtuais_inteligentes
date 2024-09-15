@@ -31,7 +31,7 @@ class CompletionConfig:
         }
 
 def generate(text:str):
-    api_key='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'
+    api_key='<YOUR API KEY>'
     config = CompletionConfig()
     config.model = "llama3-groq-70b-8192-tool-use-preview"
     config.messages = [
