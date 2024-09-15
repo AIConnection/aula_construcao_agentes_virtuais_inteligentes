@@ -1,0 +1,30 @@
+{
+    "agent": {
+        "beliefs": [
+            {
+                "name": "BookAvailable",
+                "description": "Is book '{book_title}' available?",
+                "value": true
+            },
+            {
+                "name": "BookInCollection",
+                "description": "Is book '{book_title}' in collection?",
+                "value": true
+            }
+        ],
+        "desires": [
+            {
+                "name": "FindBook",
+                "description": "Find book '{book_title}'"
+            }
+        ],
+        "intentions": [
+            {
+                "name": "FindBook",
+                "action": "acao1",
+                "conditions": ["BookAvailable"],
+                "goals": ["FindBook"]
+            }
+        ]
+    }
+}
