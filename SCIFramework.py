@@ -351,7 +351,7 @@ class SCI:
 
 # Exemplo de uso
 if __name__ == "__main__":
-    api_key = "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"
+    api_key = "{YOUR_API_KEY}"
     groq_client = GroqClient(api_key)
     sci = SCI(groq_client)
     print("Bem-vindo ao SCI com gerenciamento automático de conhecimento! Digite '!help' para ver os comandos disponíveis ou comece a conversar normalmente.")
