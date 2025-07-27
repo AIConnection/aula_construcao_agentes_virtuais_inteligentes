@@ -4,7 +4,7 @@ from groq import Groq
 
 class CompletionConfig:
     def __init__(self):
-        self.api_key='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'
+        self.api_key='{YOUR_API_KEY}'
         self.model = "llama3-groq-70b-8192-tool-use-preview"
         self.messages = []
         self.tools = []
