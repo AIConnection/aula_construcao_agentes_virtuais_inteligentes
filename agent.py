@@ -1,18 +1,27 @@
 import os
 import json
+import time
+from typing import List
+from dotenv import load_dotenv
+from jinja2 import Environment, FileSystemLoader
 from langchain_openai import ChatOpenAI
-from langchain_core.messages import SystemMessage, HumanMessage, AIMessage, ToolMessage
+from langchain_core.messages import SystemMessage, HumanMessage, AIMessage, ToolMessage, BaseMessage
 from langchain_core.tools import tool
 
-# ==========================================================
-# Configuração
-# ==========================================================
-os.environ["OPENAI_API_KEY"] = "YOUR_OPENAI_API_KEY_HERE"  # Substitua pela sua chave de API
+assistente_nome = "Pascal"
 model_name = "gpt-4o"
 
-# ==========================================================
-# Tools
-# ==========================================================
+load_dotenv() 
+
+if not os.getenv("OPENAI_API_KEY"):
+    raise ValueError("PENAI_API_KEY não encontrada no arquivo .env")
+
+def load_system_prompt(template_name: str = "system_prompt.j2", **kwargs) -> str:
+    template_dir = os.path.join(os.path.dirname(__file__), "templates")
+    env = Environment(loader=FileSystemLoader(template_dir))
+    template = env.get_template(template_name)
+    return template.render(**kwargs)
+
 @tool
 def somar(a: float, b: float) -> float:
     """Soma dois números."""
@@ -27,43 +36,37 @@ def inverter(texto: str) -> str:
 
 TOOLS = {t.name: t for t in [somar, inverter]}
 
-# ==========================================================
-# Modelo com suporte a function calling
-# ==========================================================
 llm = ChatOpenAI(model=model_name, temperature=0.2)
 llm_with_tools = llm.bind_tools(list(TOOLS.values()))
 
-# ==========================================================
-# Chat Loop
-# ==========================================================
 def chat_loop():
-    messages = [
-        SystemMessage(content="Você é um assistente útil que usa ferramentas quando necessário.")
+    system_prompt = load_system_prompt(
+        assistente_nome=assistente_nome,
+        data_atual=time.strftime("%d/%m/%Y %H:%M:%S")
+    )
+    
+    messages: List[BaseMessage] = [
+        SystemMessage(content=system_prompt)
     ]
-    print("Assistente: Olá! (digite 'sair' para encerrar)\n")
+    print(f"{assistente_nome}: Olá! (digite 'sair' para encerrar)\n")
 
     while True:
         user_input = input("Você: ").strip()
         if user_input.lower() in {"sair", "exit", "quit"}:
-            print("Assistente: Até logo!")
+            print(f"{assistente_nome}: Até logo!")
             break
 
         messages.append(HumanMessage(content=user_input))
 
-        # Loop para lidar com múltiplas chamadas de ferramentas
         while True:
-            # 1️⃣ Invocar o modelo
             ai_msg: AIMessage = llm_with_tools.invoke(messages)
             messages.append(ai_msg)
 
-            # 2️⃣ Verificar se há tool_calls
             tool_calls = ai_msg.tool_calls
             
             if not tool_calls:
-                # Sem ferramentas, apenas resposta final
                 break
 
-            # 3️⃣ Executar cada ferramenta chamada
             for tool_call in tool_calls:
                 tool_name = tool_call["name"]
                 tool_args = tool_call["args"]
@@ -71,14 +74,13 @@ def chat_loop():
 
                 tool = TOOLS.get(tool_name)
                 if not tool:
-                    result = f"❌ Ferramenta '{tool_name}' não encontrada."
+                    result = f"Ferramenta '{tool_name}' não encontrada."
                 else:
                     try:
                         result = tool.invoke(tool_args)
                     except Exception as e:
                         result = f"Erro ao executar {tool_name}: {e}"
 
-                # 4️⃣ Adicionar resposta da ferramenta às mensagens
                 messages.append(
                     ToolMessage(
                         name=tool_name,
@@ -87,9 +89,7 @@ def chat_loop():
                     )
                 )
 
-            # O loop continua para permitir que o modelo processe os resultados
-
-        print(f"Assistente: {ai_msg.content}\n")
+        print(f"{assistente_nome}: {ai_msg.content}\n")
 
 
 if __name__ == "__main__":
