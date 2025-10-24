@@ -22,7 +22,7 @@ if not os.getenv("SERPER_API_KEY"):
 
 search = GoogleSerperAPIWrapper()
 
-def load_system_prompt(template_name: str = "system_prompt.j2", **kwargs) -> str:
+def load_system_prompt(template_name: str = "system_prompt_agent_web.j2", **kwargs) -> str:
     template_dir = os.path.join(os.path.dirname(__file__), "templates")
     env = Environment(loader=FileSystemLoader(template_dir))
     template = env.get_template(template_name)
@@ -39,15 +39,16 @@ def buscar_na_web(query: str) -> str:
     Returns:
         Resultados da busca
     """
-    print(f"🔍 Buscando na web: {query}")
+    #print(f"🔍 Buscando na web: {query}")
     
     try:
-        search = GoogleSerperAPIWrapper(gl='pt', hl='br')
+        search = GoogleSerperAPIWrapper()
         resultados = search.run(query)
+
+        #print(f"✅ Resultados obtidos: {resultados}")
 
         return resultados
     except Exception as e:
-        print(f"❌ Erro ao buscar na web: {e}")
         return f"Erro ao buscar: {str(e)}"
 
 TOOLS = {t.name: t for t in [buscar_na_web]}
@@ -105,7 +106,7 @@ def chat_loop():
                     )
                 )
 
-        print(f"{assistente_nome}: {ai_msg.content}\n")
+        print(f"\n{assistente_nome}: {ai_msg.content}\n")
 
 
 if __name__ == "__main__":
